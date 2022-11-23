@@ -25,7 +25,7 @@ class c_Parse_Json {
 			}	
 
 			std::vector<json_data_t> temp_data(static_cast<int>(no_of_fans));	
-			if (true != mget_fan_info(temp_data, mjson_str)) {
+			if (0 != mget_fan_info(temp_data, mjson_str)) {
 				return false;
 			}
 
