@@ -122,6 +122,13 @@ class c_Parse_Json {
 				std::cerr << "Element Data type not matched on JSON!!!\n";
 				return -1;
 			}
+
+			if (arr[0].get<double>() > static_cast<double>(std::numeric_limits<float32_t>::max()) ||
+			    arr[1].get<double>() > static_cast<double>(std::numeric_limits<uint32_t>::max())) {
+				std::cerr << count << ": Value in JSON file Not In Range, please change!!!\n";
+				return -1;
+			}
+
 			json_data_t temp = {static_cast<float>(arr[0].get<double>()), 
 		               static_cast<uint32_t>(arr[1].get<double>())};
 			nums[count-1] = temp;	
