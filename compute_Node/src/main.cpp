@@ -35,13 +35,15 @@ float32_t get_temperature(int i) {
 int main(int argc, char *argv[]) {
 	if (argc < 1) {
 		std::cout << "1. Pass JSON Filename and its path\n";
+		return -1;
 	}
 	std::string nJson_file_name = std::string(std::string(argv[1]));
 
 	c_Parse_Json nparse_JSON(nJson_file_name);
 	std::vector<json_data_t> nVec;
 	if (true != nparse_JSON.mGet_Json_Val(nVec)) {
-		std::cerr << "Parsing JSON file faied!!!\n";
+		std::cerr << "Parsing JSON file failed!!!\n";
+		return -1;
 	}
 		
 	c_fan_Ctrl cFan_Ctrl(nVec);
