@@ -4,12 +4,8 @@
 #include<vector>
 #include<tuple>
 
-using float32_t          = float;
-using temp_DegC_t        = float32_t;
-using max_PWM_Count_t    = uint32_t;
-using curr_PWM_Count_t   = uint32_t; 
-using pwm_Duty_t         = float32_t;          
-using linera_InterPol_t  = std::pair<temp_DegC_t, pwm_Duty_t>;
+#include "fan_ctrl_types.hpp"
+
 
 class c_fan_Ctrl {
 private:
@@ -32,7 +28,7 @@ public:
 	int mGet_PWM_count(int, uint32_t &);
 	void mPrint_Fan_Count();
 
-	c_fan_Ctrl(std::vector<uint32_t>&);
+	c_fan_Ctrl(std::vector<json_data_t>&);
 	c_fan_Ctrl(const c_fan_Ctrl&)  = delete;
 	c_fan_Ctrl(const c_fan_Ctrl&&) = delete;
 	c_fan_Ctrl& operator=(const c_fan_Ctrl &) = delete;

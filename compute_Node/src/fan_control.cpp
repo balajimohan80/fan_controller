@@ -2,14 +2,17 @@
 #include<algorithm>
 
 #include "fan_control.hpp"
+#include "fan_ctrl_types.hpp"
 
-c_fan_Ctrl::c_fan_Ctrl(std::vector<uint32_t>& nfan_max_PWM_ct):mMax_Sub_System(nfan_max_PWM_ct.size()),
+c_fan_Ctrl::c_fan_Ctrl(std::vector<json_data_t>& nfan_max_PWM_ct):
+	mMax_Sub_System(nfan_max_PWM_ct.size()),
 	mFan_Controllers(nfan_max_PWM_ct.size()), 
 	mSorting_Index(nfan_max_PWM_ct.size()), 
 	mPWM_Duty_Percent(20) {
 
 	for(int i = 0; i < mMax_Sub_System; i++) {
-		std::get<1>(mFan_Controllers[i]) = nfan_max_PWM_ct[i];
+		std::get<1>(mFan_Controllers[i]) = nfan_max_PWM_ct[i].first;
+		std::get<2>(mFan_Controllers[i]) = nfan_max_PWM_ct[i].second;
 		mSorting_Index[i]                = i;
 	}
 }
