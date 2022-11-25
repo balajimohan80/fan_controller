@@ -140,6 +140,31 @@ public:
 		}
 	} 
 
+	void mWait_For_Publisher() {
+		DDS::StatusCondition_var condition = mDataReader->get_statuscondition();
+		condition->set_enabled_statuses(DDS::SUBSCRIPTION_MATCHED_STATUS);
+
+		DDS::WaitSet_var ws = new DDS::WaitSet;
+		ws->attach_condition(condition);
+		
+		DDS::Duration_t timeout = { DDS::DURATION_INFINITE_SEC, DDS::DURATION_INFINITE_NSEC };
+		DDS::ConditionSeq conditions;
+ 		DDS::SubscriptionMatchedStatus matches = { 0, 0, 0, 0, 0 };
+
+ 		while (true) {
+  			if (mDataReader->get_subscription_matched_status(matches) != DDS::RETCODE_OK) {
+                          std::cerr << "ERROR: get_subscription_matched_status() failed!\n";
+      			}
+      			if (matches.current_count == 0 && matches.total_count > 0) {
+        			break;
+      			}
+      			if (ws->wait(conditions, timeout) != DDS::RETCODE_OK) {
+				std::cerr << "wait() failed!\n";
+      			}
+    		}
+
+	}
+
 	template<typename T1, typename T2>
 	int mSend_Sample(T1& nMsg, T2 nWriter) {
 		DDS::ReturnCode_t nError = DDS::RETCODE_TIMEOUT;

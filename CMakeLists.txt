@@ -23,15 +23,16 @@ set(opendds_libs
 
 
 # Subscriber
-# add_executable(subscriber
-#   Subscriber/subscriber.cpp 
-#)
-#target_link_libraries(subscriber ${opendds_libs})
+add_executable(subscriber
+   sub/subscriber.cpp 
+)
+
+target_include_directories(subscriber PRIVATE ${COMMON_INCLUDE} ${DDS_ROOT} ${ACE_ROOT} ${TAO_ROOT})
+target_link_libraries(subscriber ${opendds_libs})
 
 add_executable(publisher
   pub/publisher.cpp 
  )
 
-include_directories(${DDS_ROOT} ${ACE_ROOT} ${TAO_ROOT})
 target_include_directories(publisher PRIVATE ${COMMON_INCLUDE} ${DDS_ROOT} ${ACE_ROOT} ${TAO_ROOT})
 target_link_libraries(publisher ${opendds_libs})
