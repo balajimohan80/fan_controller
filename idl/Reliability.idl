@@ -1,0 +1,12 @@
+
+module Reliability
+{
+  @topic	
+  struct Message
+  {
+    string id;
+    string name;
+    long count;
+    long expected;
+  };
+};

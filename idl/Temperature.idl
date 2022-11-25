@@ -1,0 +1,12 @@
+module Temperature {
+	@topic
+	struct Temperature_Data {
+		float deg_C;
+		long sub_System_ID;
+	};
+
+	@topic
+	struct Temperature_Seq {
+		sequence<Temperature_Data> Vec_Temperature;
+	};	
+};
