@@ -135,19 +135,19 @@ public:
 			DDS::ConditionSeq conditions;
 			DDS::Duration_t timeout = { 60, 0 };
 			if (ws->wait(conditions, timeout) != DDS::RETCODE_OK) {
-				std::cerr << "Wait failed!!!\n";
+				std::cerr << "Checking Subscribers!!!\n";
 			} 
 		}
 	} 
 
-	void mWait_For_Publisher() {
+	void mWait_For_Publisher(int no_of_Publishers) {
 		DDS::StatusCondition_var condition = mDataReader->get_statuscondition();
 		condition->set_enabled_statuses(DDS::SUBSCRIPTION_MATCHED_STATUS);
 
 		DDS::WaitSet_var ws = new DDS::WaitSet;
 		ws->attach_condition(condition);
 		
-		DDS::Duration_t timeout = { DDS::DURATION_INFINITE_SEC, DDS::DURATION_INFINITE_NSEC };
+		DDS::Duration_t timeout = { 60, 0 };
 		DDS::ConditionSeq conditions;
  		DDS::SubscriptionMatchedStatus matches = { 0, 0, 0, 0, 0 };
 
@@ -155,11 +155,12 @@ public:
   			if (mDataReader->get_subscription_matched_status(matches) != DDS::RETCODE_OK) {
                           std::cerr << "ERROR: get_subscription_matched_status() failed!\n";
       			}
-      			if (matches.current_count == 0 && matches.total_count > 0) {
+
+      			if (matches.total_count >= no_of_Publishers) {
         			break;
       			}
       			if (ws->wait(conditions, timeout) != DDS::RETCODE_OK) {
-				std::cerr << "wait() failed!\n";
+				std::cout << "Checking Publishers!!!\n";
       			}
     		}
 
