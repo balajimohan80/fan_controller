@@ -10,7 +10,7 @@ message("COMMON_INCLUDE: ${COMMON_INCLUDE}")
 
 # IDL TypeSupport Library
 add_library(temperture_idl)
-OPENDDS_TARGET_SOURCES(temperture_idl PUBLIC "idl/Reliability.idl" OPENDDS_IDL_OPTIONS "-Lc++11")
+OPENDDS_TARGET_SOURCES(temperture_idl PUBLIC "idl/Temperature.idl" OPENDDS_IDL_OPTIONS "-Lc++11")
 target_link_libraries(temperture_idl PUBLIC OpenDDS::Dcps)
 
 

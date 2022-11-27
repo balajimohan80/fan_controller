@@ -10,47 +10,68 @@
 #  include <dds/DCPS/transport/rtps_udp/RtpsUdp.h>
 #endif
 
-#include "ReliabilityTypeSupportImpl.h"
-
-
+//#include "ReliabilityTypeSupportImpl.h"
+#include "TemperatureTypeSupportImpl.h" 
+#if 0
 void on_Sample(Reliability::Message& msg) {
 	std::cout << "--------------------------------------\n";
 	std::cout << "ID    : " << msg._id << "\n";
 	std::cout << "Name  : " << msg._name << "\n";
 	std::cout << "Count : " << msg._count << "\n";
 }
+#else
+void on_Sample(Temperature::Temperature_Stream &msg) {
+	std::cout << "----------" << msg._seq_no << "-------------\n";
+	std::vector<Temperature::Temperature_Sys> &vec = msg._Vec_Temperature;
+	for (Temperature::Temperature_Sys &s : vec) {
+		std::cout << "System_Id : " << s._system_ID << "\n";
+		std::cout << "Deg_C     : " << s._deg_C << "\n";
+	}		
+}
+#endif
 
-#if 1
+#if 0
 using Listener_t = DataReaderListenerImpl<Reliability::MessageDataReader_var, 
                                           Reliability::MessageDataReader, Reliability::MessageSeq,
                                           Reliability::Message>;
+#else
+using Listener_t = DataReaderListenerImpl<Temperature::Temperature_StreamDataReader_var,
+                                          Temperature::Temperature_StreamDataReader,
+                                          Temperature::Temperature_StreamSeq,
+                                          Temperature::Temperature_Stream>;
 #endif
-
 int main(int argc, char *argv[]) {
 	cOpenDDS_Pub_Sub openDDS;
         if (0 != openDDS.mCreateParticipant(argc, argv, 42)) {
                 std::cerr << "Not able to create participant!!!\n";
                 return -1;
         }
-
+	
         std::string topic_name = "transaction_test";
+#if 0
         Reliability::MessageTypeSupport_var ts = new Reliability::MessageTypeSupportImpl;
-        if (ts == nullptr) {
+#else
+	Temperature::Temperature_StreamTypeSupport_var ts = 
+	new Temperature::Temperature_StreamTypeSupportImpl;
+#endif     
+   	if (ts == nullptr) {
                 std::cerr << "Not able to create memory for Type Support!!!\n";
                 return -1;
         }
-
-        if (ts && 0 != openDDS.mCreateTopic<Reliability::MessageTypeSupport_var>(topic_name,  ts)) {
-                std::cerr << "Not able to create Topic!!!\n";
+#if 0
+       if (ts && 0 != openDDS.mCreateTopic<Reliability::MessageTypeSupport_var>(topic_name,  ts)) {
+#else
+	if (ts && 0 != openDDS.mCreateTopic<Temperature::Temperature_StreamTypeSupport_var>
+	               (topic_name, ts)) {
+#endif      
+		std::cerr << "Not able to create Topic!!!\n";
                 return -1;
         }
-
 	if (0 != openDDS.mCreateSubscriber()) {
                 std::cerr << "Not able to create Publisher!!!\n";
                 return -1;
         }
 	
-
 	Listener_t* const dataReaderImpl = new Listener_t(on_Sample);
 	DDS::DataReaderListener_var listener(dataReaderImpl);
 
@@ -58,9 +79,9 @@ int main(int argc, char *argv[]) {
                 std::cerr << "Not able to create DataWriter!!!\n";
                 return -1;
         }
-
-	
-	openDDS.mWait_For_Publisher();	
+	std::cout << "Waiting for Publisher...\n";	
+	openDDS.mWait_For_Publisher(1);	
+	while(1);
 	std::cout << "Exiting Subscriber\n";
 	return 0;		
 }
