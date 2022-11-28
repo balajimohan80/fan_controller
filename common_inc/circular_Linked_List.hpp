@@ -8,15 +8,15 @@
 
 using up_counter_t = uint32_t;
 
-template<typename T>
+template<typename T1>
 class cDouble_Link_List {
 public:
-	cDouble_Link_List *mNext;
-	cDouble_Link_List *mPrev;
-	T                 *mData;
-	cDouble_Link_List():mNext(nullptr), mPrev(nullptr), mData(nullptr){};
-	cDouble_Link_List(T *data_ptr):mNext(nullptr), mPrev(nullptr), mData(data_ptr) {};
-	~cDouble_Link_List();
+	cDouble_Link_List<T1> *mNext;
+	cDouble_Link_List<T1> *mPrev;
+	T1 *mData;
+	cDouble_Link_List<T1>():mNext(nullptr), mPrev(nullptr), mData(nullptr){};
+	cDouble_Link_List(T1 *data_ptr):mNext(nullptr), mPrev(nullptr), mData(data_ptr) {};
+	~cDouble_Link_List<T1>();
 };
 
 template<typename T>
@@ -44,7 +44,7 @@ public:
 	}
 
 	
-	cCir_Link_List(size_t nCount):
+	cCir_Link_List<T>(size_t nCount):
 	mList(static_cast<cDouble_Link_List<T>*>(std::calloc(nCount,sizeof(cDouble_Link_List<T>)))),
 	mData_Container(nCount),max_Buff_Size(nCount) {
 		cDouble_Link_List<T> *n_nxt  = &mList[1];
@@ -65,10 +65,10 @@ public:
 			
 		mCurr_Pop_List.store(mHead.load());
 		mLast_Popped_List = nullptr;
-		mprint_addr();
+	//	mprint_addr();
 	}  
 	
-	~cCir_Link_List() {
+	~cCir_Link_List<T>() {
 		std::free(mList);
 	}
 
