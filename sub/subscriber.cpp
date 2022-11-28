@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "circular_Linked_List.hpp"
 #include "openDDS_Pub_Sub.hpp"
 #include "DataReaderListenerImpl.hpp"
 
@@ -11,7 +12,23 @@
 #endif
 
 //#include "ReliabilityTypeSupportImpl.h"
-#include "TemperatureTypeSupportImpl.h" 
+#include "TemperatureTypeSupportImpl.h"
+
+//int gcSize = 5;
+cCir_Link_List<Temperature::Temperature_Stream> gcList(5); 
+
+#if 0
+template<typename T1>
+class Double_List {
+public:
+	Double_List *mNext;
+	Double_List *mPrev;
+	T1 *mptr;
+}; 
+
+Double_List<Temperature::Temperature_Stream> *clist = nullptr;
+#endif
+
 #if 0
 void on_Sample(Reliability::Message& msg) {
 	std::cout << "--------------------------------------\n";
@@ -21,12 +38,16 @@ void on_Sample(Reliability::Message& msg) {
 }
 #else
 void on_Sample(Temperature::Temperature_Stream &msg) {
-	std::cout << "----------" << msg._seq_no << "-------------\n";
+//	std::cout << "----------" << msg._seq_no << "-------------\n";
+#if 0
 	std::vector<Temperature::Temperature_Sys> &vec = msg._Vec_Temperature;
 	for (Temperature::Temperature_Sys &s : vec) {
 		std::cout << "System_Id : " << s._system_ID << "\n";
 		std::cout << "Deg_C     : " << s._deg_C << "\n";
-	}		
+	}
+#else
+	gcList.str_Element(msg);
+#endif		
 }
 #endif
 
@@ -81,7 +102,19 @@ int main(int argc, char *argv[]) {
         }
 	std::cout << "Waiting for Publisher...\n";	
 	openDDS.mWait_For_Publisher(1);	
-	while(1);
+	while(1) {
+		Temperature::Temperature_Stream *m_ptr = gcList.pop();
+		if (m_ptr != nullptr)  {
+			std::cout << "---------------Main: " << m_ptr->_seq_no << "---------\n";
+			std::vector<Temperature::Temperature_Sys> &vec = m_ptr->_Vec_Temperature;
+			
+	for (Temperature::Temperature_Sys &s : vec) {
+		std::cout << "System_Id : " << s._system_ID << "\n";
+		std::cout << "Deg_C     : " << s._deg_C << "\n";
+	}
+			gcList.push(m_ptr);
+		}
+	}
 	std::cout << "Exiting Subscriber\n";
 	return 0;		
 }

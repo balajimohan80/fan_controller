@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 #else
 	
 	Temperature::Temperature_Stream msg;
-	int max_loop_count = 10;
+	int max_loop_count = 10000;
 	for (int ct = 0 ; ct < max_loop_count; ct++) {
 		std::vector<Temperature::Temperature_Sys> temp(10, 
 		                                          Temperature::Temperature_Sys());
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 		openDDS.mSend_Sample<Temperature::Temperature_Stream , 
 		                     Temperature::Temperature_StreamDataWriter_var>(
 		                     msg, msg_Writer);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000)); 
+		std::this_thread::sleep_for(std::chrono::milliseconds(1)); 
 	}
 #endif
 	std::cout << "Publisher Exits...\n";
