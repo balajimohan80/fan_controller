@@ -25,7 +25,7 @@ private:
 	cDouble_Link_List<T> *mList;
 	std::vector<T> mData_Container;
 	std::atomic<cDouble_Link_List<T>*> mHead;
-	cDouble_Link_List<T> *mCurr_Pop_List;
+	std::atomic<cDouble_Link_List<T>*> mCurr_Pop_List;
 	cDouble_Link_List<T> *mLast_Popped_List;
 	const uint32_t max_Buff_Size;
 
@@ -63,7 +63,7 @@ public:
 		cDouble_Link_List<T> *n_End  = &mList[nCount-1];
 		n_End->mNext = mList;
 			
-		mCurr_Pop_List = mHead;
+		mCurr_Pop_List.store(mHead.load());
 		mLast_Popped_List = nullptr;
 		mprint_addr();
 	}  
@@ -79,8 +79,10 @@ public:
 		T* data_ptr = n_Head->mData;
 		*data_ptr = msg;
 		n_Head = n_Head->mNext;
-		if (mCurr_Pop_List == n_Head) {
-			mCurr_Pop_List=mCurr_Pop_List->mNext;
+		cDouble_Link_List<T> *n_Curr_Pop_List = mCurr_Pop_List.load();
+		if (n_Curr_Pop_List == n_Head) {
+			n_Curr_Pop_List = n_Curr_Pop_List->mNext;
+			mCurr_Pop_List.exchange(n_Curr_Pop_List);
 		}
 		mHead.exchange(n_Head);
 	}	
@@ -88,14 +90,17 @@ public:
 	
 	T* pop() {
 		T* ret_Ptr = nullptr;
-		if (mCurr_Pop_List == mHead) return  ret_Ptr;
-		cDouble_Link_List<T> *nPrev = mCurr_Pop_List->mPrev;
-		nPrev->mNext                = mCurr_Pop_List->mNext;
-		cDouble_Link_List<T> *nNext = mCurr_Pop_List->mNext;
+	 	cDouble_Link_List<T> *nCurr_Pop_List = mCurr_Pop_List.load();
+		if (nCurr_Pop_List == mHead) return  ret_Ptr;
+		
+		cDouble_Link_List<T> *nPrev = nCurr_Pop_List->mPrev;
+		nPrev->mNext                = nCurr_Pop_List->mNext;
+		cDouble_Link_List<T> *nNext = nCurr_Pop_List->mNext;
 		nNext->mPrev                = nPrev;
-		ret_Ptr                     = mCurr_Pop_List->mData;
-		mLast_Popped_List           = mCurr_Pop_List;
-		mCurr_Pop_List              = mCurr_Pop_List->mNext;
+		ret_Ptr                     = nCurr_Pop_List->mData;
+		mLast_Popped_List           = nCurr_Pop_List;
+		nCurr_Pop_List              = nCurr_Pop_List->mNext;
+		mCurr_Pop_List.exchange(nCurr_Pop_List);
 		return ret_Ptr; 	
 	}
 
