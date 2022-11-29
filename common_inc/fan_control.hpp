@@ -19,7 +19,6 @@ private:
 	std::vector<int> mSorting_Index;
 	float32_t mPWM_Duty_Percent;
 	
-	void mCompute_PWM_count(float32_t);
 	float32_t mCompute_Interpolation(float32_t);
 	
 public:
@@ -27,7 +26,10 @@ public:
 	float32_t mCompute_Duty_Cycle();
 	int mGet_PWM_count(int, uint32_t &);
 	void mPrint_Fan_Count();
-
+	void mCompute_PWM_count(float32_t);
+	float32_t mGetMax_Temp_Sensor();
+	uint32_t mGetMax_PWM_Count();
+	
 	c_fan_Ctrl(std::vector<json_data_t>&);
 	c_fan_Ctrl(const c_fan_Ctrl&)  = delete;
 	c_fan_Ctrl(const c_fan_Ctrl&&) = delete;

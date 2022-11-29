@@ -170,7 +170,6 @@ public:
 	int mSend_Sample(T1& nMsg, T2 nWriter) {
 		DDS::ReturnCode_t nError = DDS::RETCODE_TIMEOUT;
 		while (nError == DDS::RETCODE_TIMEOUT) {
-			std::cerr << "Pub: Trying to Send...\n";
 			nError = nWriter->write( nMsg, DDS::HANDLE_NIL);
 			if (nError == DDS::RETCODE_TIMEOUT) {
 				std::cerr << "Timeout, resending !!!\n";
@@ -190,7 +189,14 @@ public:
 	~cOpenDDS_Pub_Sub() {
 		mcleanup();
 	}	
+	
+	DDS::DomainParticipant_var& mGet_Participant() {
+		return mParticipant;
+	}
 
+	void mSet_Participant(DDS::DomainParticipant_var &ref) {
+		mParticipant = ref;
+	}
 private:
 	DDS::DomainParticipantFactory_var mDpf;
 	DDS::DomainParticipant_var mParticipant;

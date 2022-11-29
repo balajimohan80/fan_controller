@@ -1,0 +1,8 @@
+module FanController {
+	@topic
+	struct FanController_Sys {
+		float common_PWM_Dutycycle;
+		long seq_no;
+	};
+
+};

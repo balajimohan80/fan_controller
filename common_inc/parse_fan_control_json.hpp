@@ -33,7 +33,7 @@ class c_Parse_Json {
 			return true;
 		}
 
-		int mGet_total_fans() {
+		int mGet_total_sensors() {
 			int ret = -1;
 			
 			if (0 != mreadFile_Into_String(mjson_file_name, mjson_str)) {
@@ -76,12 +76,12 @@ class c_Parse_Json {
 			return -1;
 		}
 
-		if (true != json_val.get("Total_Number_Of_Fans").is<double>()) {
-			std::cerr << "Total_Number_Of_Fans key is missing!!!\n";
+		if (true != json_val.get("Total_Number_Of_TempSensor").is<double>()) {
+			std::cerr << "Total_Number_Of_TempSensor key is missing!!!\n";
 			return -1;
 		}
 
-		no_of_fans = json_val.get("Total_Number_Of_Fans").get<double>();
+		no_of_fans = json_val.get("Total_Number_Of_TempSensor").get<double>();
 		return 0;
 	}
 

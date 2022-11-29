@@ -56,8 +56,16 @@ float32_t c_fan_Ctrl::mCompute_Duty_Cycle() {
 			return std::get<0>(mFan_Controllers[a]) > std::get<0>(mFan_Controllers[b]);
 	});
 	mPWM_Duty_Percent = mCompute_Interpolation(std::get<0>(mFan_Controllers[mSorting_Index[0]]));
-	mCompute_PWM_count(mPWM_Duty_Percent);
+	//mCompute_PWM_count(mPWM_Duty_Percent);
 	return mPWM_Duty_Percent;
+}
+
+float32_t c_fan_Ctrl::mGetMax_Temp_Sensor() {
+	return std::get<0>(mFan_Controllers[mSorting_Index[0]]);
+}
+
+uint32_t c_fan_Ctrl::mGetMax_PWM_Count() {
+	return std::get<1>(mFan_Controllers[mSorting_Index[0]]);
 }
 
 int c_fan_Ctrl::mGet_PWM_count(int index, uint32_t &val) {
@@ -71,7 +79,7 @@ void c_fan_Ctrl::mPrint_Fan_Count() {
 	for (int index : mSorting_Index) {
 		fan_ctrl_t& fan = mFan_Controllers[index];
 		std::cout << 1+ct++ << ": " <<  index+1 << ":: Temperature= " ; 
-		std::cout << std::get<0>(fan) << " Deg.C";
+//		std::cout << std::get<0>(fan) << " Deg.C";
 		std::cout << " Max_PWM_Count= " << std::get<1>(fan);
 		std::cout << " Computed_PWM_Count= " << std::get<2>(fan) << "\n";
 	}	
