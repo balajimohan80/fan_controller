@@ -194,6 +194,8 @@ int main(int argc, char *argv[]) {
 			const int32_t nCurr_Delta_Seq = m_ptr->_seq_no - nPrev_Seq_no; 
 			if (m_ptr->_seq_no != 0  &&  nPrev_Seq_no > m_ptr->_seq_no) {
 				std::cerr << "Data's is out of order!!!\n";
+				//Release/Attach the node
+				gcList.push(m_ptr);
 				continue;
 			//Find no of samples lost 
 			} else if (nCurr_Delta_Seq > nContinues_Lost_Samples) {
@@ -231,12 +233,12 @@ int main(int argc, char *argv[]) {
 				std::cout << m_ptr->_seq_no << ": Common Duty Cycle= " << msg._common_PWM_Dutycycle; 
 				std::cout << " Temp: " << cFan_Ctrl.mGetMax_Temp_Sensor();
 				std::cout << " Max PWM Count: " << cFan_Ctrl.mGetMax_PWM_Count() << "\n"; 	
-				gcList.push(m_ptr);
 				cFan_Ctrl_Pub.mSend_Sample<FanController::FanController_Sys ,
                                      FanController::FanController_SysDataWriter_var>(
                                      msg, nMsg_Writer);
 			}
-
+			//Must attach a node
+			gcList.push(m_ptr);
 		}
 	}
 EXIT:

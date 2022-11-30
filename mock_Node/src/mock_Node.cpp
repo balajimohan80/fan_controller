@@ -103,6 +103,8 @@ int main() {
 			const int32_t nCurr_Delta_Seq = m_ptr->_seq_no - nPrev_Seq_no; 
 			if (m_ptr->_seq_no != 0  &&  nPrev_Seq_no > m_ptr->_seq_no) {
 				std::cerr << "Data's is out of order!!!\n";
+				//Release/attach the node
+				 gcList.push(m_ptr);
 				continue;
 			//Find no of samples lost 
 			} else if (nCurr_Delta_Seq > nContinues_Lost_Samples) {
