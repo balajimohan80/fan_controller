@@ -17,6 +17,10 @@
 
 #include "TemperatureTypeSupportImpl.h"
 
+
+uint32_t g_Num_Of_Secs = 60;
+uint32_t g_Delay_In_ms = 1;
+
 float generate_number(float lower_bound, float upper_bound) {
         std::random_device rd;
         std::default_random_engine generator(rd());
@@ -25,13 +29,50 @@ float generate_number(float lower_bound, float upper_bound) {
 }
 
 
+static void show_Usage(const std::string &name) {
+	std::cerr << "Usuage: " << name << " <option(s)> SOURCES "
+		<< "Options: \n"
+		<< "\t-h, --help\t\tShow this help message\n"
+		<< "\t-s, --sec       <Number of Seconds this application has to run>\n"
+		<< "\t-d, --delay     <Delay in ms on each iteration>\n"
+		<< "\n";
+}
 
+static void parse_Arguments(const int argc, char **argv) {
+	for (int i = 1; i < argc; i++) {
+		const std::string arg = argv[i];
+		if (arg == "-h" || arg == "--help") {
+			show_Usage(arg);
+			exit(0);
+		} else if (arg == "-s" || arg == "--sec") {
+			g_Num_Of_Secs = std::stoi(static_cast<std::string>(argv[i+1]));
+			++i;
+		} else if (arg == "-d" || arg == "--delay") {
+			 g_Delay_In_ms = std::stoi(static_cast<std::string>(argv[i+1]));
+			 ++i;
+		} else {
+			show_Usage(arg);
+			exit(0);
+		}
+	}
+}
+
+bool is_Time_Exceeded(std::chrono::seconds &no_of_Secs) {
+	static auto start = std::chrono::steady_clock::now();  
+	auto end          = std::chrono::steady_clock::now();
+	std::chrono::seconds total_no_of_secs =
+	std::chrono::duration_cast<std::chrono::duration<long int, std::ratio<1l, 1l>>>(end - start);
+	return total_no_of_secs > no_of_Secs; 	 		
+}
 int main(int argc, char *argv[]) {
 	std::chrono::milliseconds ms_to_sleep(1);
+	std::chrono::seconds sec_to_run_app;
 	if (argc > 1) {
-		if (std::string(argv[1]) == std::string("--sleep")) 
-			ms_to_sleep = static_cast<std::chrono::milliseconds>(std::stoi(std::string(argv[2])));
+		parse_Arguments(argc, argv);
 	}
+	
+	ms_to_sleep = static_cast<std::chrono::milliseconds>(g_Delay_In_ms);
+	sec_to_run_app = static_cast<std::chrono::seconds>(g_Num_Of_Secs);
 	
 	std::string nJson_file_name = std::string("fan_controller.json");
 	c_Parse_Json nparse_JSON(nJson_file_name);
@@ -52,7 +93,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::string topic_name = "temperature_sensor_node";
-	Temperature::Temperature_StreamTypeSupport_var ts; 
+	Temperature::Temperature_StreamTypeSupport* ts; 
 	try {
 		ts = new Temperature::Temperature_StreamTypeSupportImpl;
 	} catch(std::exception &e) {
@@ -93,22 +134,27 @@ int main(int argc, char *argv[]) {
 
 	
 	Temperature::Temperature_Stream msg;
-	int max_loop_count = 10000;
-	for (int ct = 0 ; ct < max_loop_count; ct++) {
-		std::vector<Temperature::Temperature_Sys> temp(no_of_Subsystems, 
-		                                          Temperature::Temperature_Sys());
+	uint32_t nCounter = 0;
+
+	std::vector<Temperature::Temperature_Sys> temp(no_of_Subsystems, 
+		                                       Temperature::Temperature_Sys());
+	while (!is_Time_Exceeded(sec_to_run_app)) {
 		for (int i = 0 ; i < temp.size(); i++) {
 			temp[i]._system_ID  = i;
 			temp[i]._deg_C      = generate_number(25.0f, 75.0f);
 		}
 
 		msg._Vec_Temperature = temp;
-		msg._seq_no          = ct;
+		msg._seq_no          = nCounter++;
 
 		openDDS.mSend_Sample<Temperature::Temperature_Stream , 
 		                     Temperature::Temperature_StreamDataWriter_var>(
 		                     msg, msg_Writer);
 		std::this_thread::sleep_for(std::chrono::milliseconds(ms_to_sleep)); 
+	}
+
+	if (is_Time_Exceeded(sec_to_run_app)) { 
+		std::cout << "EXIT gracefully, because of timer expiration\n";
 	}
 	std::cout << "Publisher Exits...\n";
 	return 0;			
