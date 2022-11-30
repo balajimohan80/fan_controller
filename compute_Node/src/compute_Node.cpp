@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 	
 	std::vector<std::string> dds_initialization=
   	{std::string("-DCPSConfigFile"), std::string("rtps.ini" )};
-	char *c_Str[dds_initialization.size()] = {const_cast<char *>(dds_initialization[0].c_str()),
+	char *c_Str[] = {const_cast<char *>(dds_initialization[0].c_str()),
 	                  const_cast<char *>(dds_initialization[1].c_str())};
         if (0 != cTemp_Sensor_Sub.mCreateParticipant(dds_initialization.size(), c_Str, 42)) {
         	std::cerr << "Not able to create participant!!!\n";
@@ -194,6 +194,7 @@ int main(int argc, char *argv[]) {
 			const int32_t nCurr_Delta_Seq = m_ptr->_seq_no - nPrev_Seq_no; 
 			if (m_ptr->_seq_no != 0  &&  nPrev_Seq_no > m_ptr->_seq_no) {
 				std::cerr << "Data's is out of order!!!\n";
+				nPrev_Seq_no = m_ptr->_seq_no;
 				continue;
 			//Find no of samples lost 
 			} else if (nCurr_Delta_Seq > nContinues_Lost_Samples) {
