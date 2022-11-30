@@ -1,3 +1,14 @@
+/************************************************************************************************
+*   \file      compute_Node.cpp
+*   \author    Balaji Mohan
+*   \EmailID   balajimohan80@gmail.com
+*   \date      11/29/2022
+*   \brief     This application node will compute PWM duty cycle based on the highest  
+*              temperature of the subsystem. It will sort the highest temperature 
+*              and compute the PWM duty cycle based on linear interpolation.
+*              This application node subscribes the temperature from temperature sensor node
+*              and compute PWM duty cylce and then publish it.
+*************************************************************************************************/
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -106,6 +117,7 @@ int main(int argc, char *argv[]) {
  	}
 	
 	c_fan_Ctrl cFan_Ctrl(nVec);
+	const uint32_t n_Total_Sub_Systems = nVec.size();
 	cOpenDDS_Pub_Sub cTemp_Sensor_Sub;
 	cOpenDDS_Pub_Sub cFan_Ctrl_Pub;
 	
@@ -169,34 +181,65 @@ int main(int argc, char *argv[]) {
 	FanController::FanController_Sys msg;
 	int32_t nPrev_Seq_no = 0;
 	const int32_t nContinues_Lost_Samples =  10;
+	std::vector<uint8_t> find_Duplicate_ID(n_Total_Sub_Systems, 0);
+	int32_t nFan_Pub_Seq_no = 0;
 	while(1) {
 		Temperature::Temperature_Stream *m_ptr = gcList.pop();
 		if (m_ptr != nullptr)  {
-			std::vector<Temperature::Temperature_Sys> &vec = m_ptr->_Vec_Temperature;
+			//Reset vector to Zero
+			std::memset(static_cast<void *>(find_Duplicate_ID.data()), 0, 
+			            find_Duplicate_ID.size());
+
+			//Check the sequence are our of order or not.
 			const int32_t nCurr_Delta_Seq = m_ptr->_seq_no - nPrev_Seq_no; 
 			if (m_ptr->_seq_no != 0  &&  nPrev_Seq_no > m_ptr->_seq_no) {
 				std::cerr << "Data's is out of order!!!\n";
 				continue;
+			//Find no of samples lost 
 			} else if (nCurr_Delta_Seq > nContinues_Lost_Samples) {
 				std::cerr << "Lost Data Sequences: " << nCurr_Delta_Seq << "\n";
 			}
 			nPrev_Seq_no = m_ptr->_seq_no; 
+			bool is_Valid_Data = true;
+			
+			int counter = 0;
+			std::vector<Temperature::Temperature_Sys> &vec = m_ptr->_Vec_Temperature;
 			for (Temperature::Temperature_Sys &s : vec) {
-				cFan_Ctrl.mSet_temperature(s._deg_C, s._system_ID);
+				//Check Subsystem ID is in-range or not
+				if ((s._system_ID >= 0 && s._system_ID < n_Total_Sub_Systems) &&
+				    //Check duplicate subsystem is received or not	
+				    (0 == find_Duplicate_ID[s._system_ID])) { 
+					cFan_Ctrl.mSet_temperature(s._deg_C, s._system_ID);
+				} else {
+					std::cerr << "Received SusSystem ID: " << s._system_ID;
+					std::cerr << "Out of Range !!!\n";
+					is_Valid_Data = false;
+					break;
+				}
+				find_Duplicate_ID[s._system_ID] = 0xAA;
+				++counter;
 			}
-			msg._common_PWM_Dutycycle = cFan_Ctrl.mCompute_Duty_Cycle();
-			std::cout << m_ptr->_seq_no << ": Common Duty Cycle= " << msg._common_PWM_Dutycycle; 
-			std::cout << " Temp: " << cFan_Ctrl.mGetMax_Temp_Sensor();
-			std::cout << " Max PWM Count: " << cFan_Ctrl.mGetMax_PWM_Count() << "\n"; 	
-			gcList.push(m_ptr);
-			cFan_Ctrl_Pub.mSend_Sample<FanController::FanController_Sys ,
+			//Check all temperature susbsystem is received or not
+			if (is_Valid_Data && counter != n_Total_Sub_Systems) {
+				is_Valid_Data = false;
+				std::cerr << "Not received all subsystem temperatures\n";	
+			}  
+
+			if (is_Valid_Data) {
+				msg._common_PWM_Dutycycle = cFan_Ctrl.mCompute_Duty_Cycle();
+				msg._seq_no               = ++nFan_Pub_Seq_no;
+				std::cout << m_ptr->_seq_no << ": Common Duty Cycle= " << msg._common_PWM_Dutycycle; 
+				std::cout << " Temp: " << cFan_Ctrl.mGetMax_Temp_Sensor();
+				std::cout << " Max PWM Count: " << cFan_Ctrl.mGetMax_PWM_Count() << "\n"; 	
+				gcList.push(m_ptr);
+				cFan_Ctrl_Pub.mSend_Sample<FanController::FanController_Sys ,
                                      FanController::FanController_SysDataWriter_var>(
                                      msg, nMsg_Writer);
+			}
 
 		}
 	}
 EXIT:
 	std::cout << "Exiting Compute Node:...\n";
 	return 0;		
-
 }

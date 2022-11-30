@@ -1,3 +1,16 @@
+/*************************************************************************************************
+*   \file      circular_Linked_List.hpp
+*   \author    Balaji Mohan
+*   \EmailID   balajimohan80@gmail.com
+*   \date      11/29/2022
+*   \brief     This ring buffer is designed based on doubly linked list.
+*              This list can traverse reverse and front of the list.
+*              It has known limitation that, it can work with single producer and consumer thread.
+*              Producer thread can do deep copy the data into the one of the readily 
+*              available node from the list.
+*              To process the data by the consumer thread, it will first detach only one node
+*              from the list and process it and then attach the same node to the list.
+**************************************************************************************************/
 #ifndef __CIRCULAR_DOUBLE_LIST_HPP__
 #define __CIRCULAR_DOUBLE_LIST_HPP__
 #include<iostream>
@@ -65,7 +78,6 @@ public:
 			
 		mCurr_Pop_List.store(mHead.load());
 		mLast_Popped_List = nullptr;
-	//	mprint_addr();
 	}  
 	
 	~cCir_Link_List<T>() {

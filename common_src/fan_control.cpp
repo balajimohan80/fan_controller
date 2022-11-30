@@ -1,3 +1,15 @@
+/*************************************************************************************************
+*   \file      fan_control.cpp
+*   \author    Balaji Mohan
+*   \EmailID   balajimohan80@gmail.com
+*   \date      11/29/2022
+*   \brief     This class act as an interface/map between Temperature subsystem and Fan Controller.
+*              Each temp sensor is assigned with unique ID. This Unique ID is mapped with
+*              Fan Controller. Compute function will sort and identify the highest temperature
+*              subsytem. Based on the highest temperature will compute PWM duty cycle based on
+*              linear interpolation. Based on the common PWM duty cycle, it will find PWM
+*              counts on each FAN controller.  
+**************************************************************************************************/
 #include<iostream>
 #include<algorithm>
 
@@ -78,10 +90,10 @@ void c_fan_Ctrl::mPrint_Fan_Count() {
 	int ct = 0;
 	for (int index : mSorting_Index) {
 		fan_ctrl_t& fan = mFan_Controllers[index];
-		std::cout << 1+ct++ << ": " <<  index+1 << ":: Temperature= " ; 
-//		std::cout << std::get<0>(fan) << " Deg.C";
-		std::cout << " Max_PWM_Count= " << std::get<1>(fan);
-		std::cout << " Computed_PWM_Count= " << std::get<2>(fan) << "\n";
+		std::cout << " FAN Controller "   << ct+1; 
+		std::cout << ": Max_PWM_Count = " << std::get<1>(fan);
+		std::cout << " HW REG = "         << std::get<2>(fan) << "\n";
+		ct++;
 	}	
 }
 

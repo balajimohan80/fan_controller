@@ -1,3 +1,17 @@
+/*************************************************************************************
+*   \file      temperatureSensor_Node.cpp
+*   \author    Balaji Mohan
+*   \EmailID   balajimohan80@gmail.com
+*   \date      11/29/2022
+*   \brief     It's an application code which publishes the temperature 
+*              of the subsystem. During application initialization, it 
+*              will parse JSON file to get total number of susbsystem.
+*              There were two optional parameters that user can pass:
+*              1. "--sec": Number of Seconds to publish temperature of the subsystems
+*                 Default Value is 60Seconds.
+*              2. "--delay": Sleep in ms, at each iteration to publish temperature.
+*                 Default value is 1ms, user can set to 0ms.  
+************************************************************************************/
 #include <iostream>
 #include <string>
 #include <vector>
@@ -138,6 +152,7 @@ int main(int argc, char *argv[]) {
 
 	std::vector<Temperature::Temperature_Sys> temp(no_of_Subsystems, 
 		                                       Temperature::Temperature_Sys());
+	bool brk = false;
 	while (!is_Time_Exceeded(sec_to_run_app)) {
 		for (int i = 0 ; i < temp.size(); i++) {
 			temp[i]._system_ID  = i;
@@ -147,15 +162,29 @@ int main(int argc, char *argv[]) {
 		msg._Vec_Temperature = temp;
 		msg._seq_no          = nCounter++;
 
-		openDDS.mSend_Sample<Temperature::Temperature_Stream , 
+		if (0 != openDDS.mSend_Sample<Temperature::Temperature_Stream , 
 		                     Temperature::Temperature_StreamDataWriter_var>(
-		                     msg, msg_Writer);
-		std::this_thread::sleep_for(std::chrono::milliseconds(ms_to_sleep)); 
+		                     msg, msg_Writer)) {
+			static int nfail_count = 10;
+			std::cerr << nfail_count << ": Publisher failed to send data !!!\n";
+			if (--nfail_count < 0) {
+				brk = true;
+				break;
+			}
+		}
+		
+		if (g_Delay_In_ms > 0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(ms_to_sleep)); 
+		}
 	}
 
-	if (is_Time_Exceeded(sec_to_run_app)) { 
+	if (!brk && is_Time_Exceeded(sec_to_run_app)) { 
 		std::cout << "EXIT gracefully, because of timer expiration\n";
+	} else {
+		std::cerr << "Application exit due to failed to publish samples\n";
+		return -1;
 	}
+
 	std::cout << "Publisher Exits...\n";
 	return 0;			
 }

@@ -5,6 +5,7 @@
 #include<string>
 #include<vector>
 #include<fstream>
+#include<set>
 
 #include "picojson.h"
 #include "fan_ctrl_types.hpp"
@@ -102,12 +103,19 @@ class c_Parse_Json {
 	
 		picojson::object &obj = json_val.get("Fan_Info").get<picojson::object>();
 		int count = 1;
+		std::set<int> check; 	
 		for (picojson::object::iterator it = obj.begin(); it != obj.end(); it++, count++) {
-			if (it->first != std::to_string(count))  {
-				std::cerr << "Count value not matched on JSON file (ct : " << count << ")\n";
+			int index = std::stoi(it->first) - 1;
+			if (index >= nums.size())  {
+				std::cerr << "Count value not matched on JSON file " << it->first << ")\n";
 				return -1;
 			}
-
+			if (check.end() != check.find(index)) {
+				std::cerr << "Same  value is repeated twice, please check index value: ";
+				std::cerr << it->first;
+				return -1;
+			}
+			check.emplace(index);
 			if (true != it->second.is<picojson::array>()) {
 				std::cerr << "Array not matched on JSON!!!\n";
 				return -1;
@@ -131,7 +139,7 @@ class c_Parse_Json {
 
 			json_data_t temp = {static_cast<float>(arr[0].get<double>()), 
 		               static_cast<uint32_t>(arr[1].get<double>())};
-			nums[count-1] = temp;	
+			nums[index] = temp;	
 		}	
 
 		return 0;

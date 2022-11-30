@@ -1,3 +1,14 @@
+/************************************************************************************************
+*   \file      mock_Node.cpp
+*   \author    Balaji Mohan
+*   \EmailID   balajimohan80@gmail.com
+*   \date      11/29/2022
+*   \brief     This application node will compute PWM counts on each fan controller 
+*              based on PWM duty cycle published by Compute NODE.
+*              This application will parse the JSON configuration file to store the 
+*              number of FAN controllers and its maximum PWM counts.
+*************************************************************************************************/
+
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -83,12 +94,30 @@ int main() {
 	std::cout << "Waiting for Publisher...\n";
 	openDDS.mWait_For_Publisher(1);
 
+	int32_t nPrev_Seq_no = 0;
+	const int32_t nContinues_Lost_Samples =  10;
 	while(1) {
 		FanController::FanController_Sys *m_ptr = gcList.pop();
 		if (m_ptr != nullptr)  {
-			std::cout << "---------------------------------\n";
-                        cFan_Ctrl.mCompute_PWM_count(m_ptr->_common_PWM_Dutycycle);
-			cFan_Ctrl.mPrint_Fan_Count();
+			//Check the sequence are our of order or not.
+			const int32_t nCurr_Delta_Seq = m_ptr->_seq_no - nPrev_Seq_no; 
+			if (m_ptr->_seq_no != 0  &&  nPrev_Seq_no > m_ptr->_seq_no) {
+				std::cerr << "Data's is out of order!!!\n";
+				continue;
+			//Find no of samples lost 
+			} else if (nCurr_Delta_Seq > nContinues_Lost_Samples) {
+				std::cerr << "Lost Data Sequences: " << nCurr_Delta_Seq << "\n";
+			}
+			nPrev_Seq_no = m_ptr->_seq_no;
+			const float nPWM_Duty_Cycle = m_ptr->_common_PWM_Dutycycle;
+			std::cout << "-------------"<< nPrev_Seq_no;
+			std::cout << " (PWM DUTY CYCLE: " << nPWM_Duty_Cycle << ") --------------------\n";
+			if (nPWM_Duty_Cycle >= 0.2f && nPWM_Duty_Cycle <= 1.0f) {
+                        	cFan_Ctrl.mCompute_PWM_count(m_ptr->_common_PWM_Dutycycle);
+				cFan_Ctrl.mPrint_Fan_Count();
+			} else {
+				std::cerr << "PWM Duty Cycle is out of range: " << nPWM_Duty_Cycle << "!!!\n"; 
+			}
                         gcList.push(m_ptr);
                 }
         }

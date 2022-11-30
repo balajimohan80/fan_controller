@@ -3,7 +3,7 @@
 using float32_t          = float;
 using temp_DegC_t        = float32_t;
 using max_PWM_Count_t    = uint32_t;
-using curr_PWM_Count_t   = uint32_t; 
+using fanctrl_HW_Reg     = uint32_t; 
 using pwm_Duty_t         = float32_t;          
 using linera_InterPol_t  = std::pair<temp_DegC_t, pwm_Duty_t>;
 

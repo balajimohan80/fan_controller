@@ -1,3 +1,13 @@
+/*************************************************************************************************
+*   \file      DataReaderListenerImpl.hpp
+*   \author    Balaji Mohan
+*   \EmailID   balajimohan80@gmail.com
+*   \date      11/29/2022
+*   \brief     This class creates the data reader implementation for OpenDDS. 
+*              Application will register the callback function, upon every arrival of samples
+*              a regsitered callback function gets called from OpenDDS reader thread.
+**************************************************************************************************/
+
 #ifndef __DATAREADER_LISTENER_IMPL_H__
 #define __DATAREADER_LISTENER_IMPL_H__
 

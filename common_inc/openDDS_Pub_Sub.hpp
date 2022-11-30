@@ -1,3 +1,13 @@
+/*************************************************************************************************
+*   \file      openDDS_Pub_Sub.hpp
+*   \author    Balaji Mohan
+*   \EmailID   balajimohan80@gmail.com
+*   \date      11/29/2022
+*   \brief     This class is implemented based on adapter C++ patterns.
+*              This class will isolate the application to create and register publisher and subscriber
+*              with OpenDDS. This class will map all OpenDDS API's. 
+**************************************************************************************************/
+
 #ifndef __OPEN_DDS_PUB_SUB_HPP__
 #define __OPEN_DDS_PUB_SUB_HPP__
 
@@ -167,17 +177,17 @@ public:
 	}
 
 	template<typename T1, typename T2>
-	int mSend_Sample(T1& nMsg, T2 nWriter) {
+	int mSend_Sample(T1& nMsg, T2 nWriter, int nloop_count=5) {
 		DDS::ReturnCode_t nError = DDS::RETCODE_TIMEOUT;
-		while (nError == DDS::RETCODE_TIMEOUT) {
+		while (nloop_count-- && nError == DDS::RETCODE_TIMEOUT) {
 			nError = nWriter->write( nMsg, DDS::HANDLE_NIL);
 			if (nError == DDS::RETCODE_TIMEOUT) {
-				std::cerr << "Timeout, resending !!!\n";
+				std::cerr << nloop_count << ": Timeout, resending !!!\n";
 			} else if (nError != DDS::RETCODE_OK) {
-				std::cerr << "Write returned " << nError << "\n";
+				std::cerr << nloop_count << ": Write returned " << nError << "\n";
 			}
 		}
-		return 0;
+		return nloop_count > 0 ? 0 : -1;
 	}
 
 	void mcleanup() {
@@ -186,9 +196,6 @@ public:
 		TheServiceParticipant->shutdown();
 		std::cout << "OpenDDS cleanup done\n";
 	}
-	~cOpenDDS_Pub_Sub() {
-		mcleanup();
-	}	
 	
 	DDS::DomainParticipant_var& mGet_Participant() {
 		return mParticipant;
@@ -197,6 +204,10 @@ public:
 	void mSet_Participant(DDS::DomainParticipant_var &ref) {
 		mParticipant = ref;
 	}
+
+	~cOpenDDS_Pub_Sub() {
+		mcleanup();
+	}	
 private:
 	DDS::DomainParticipantFactory_var mDpf;
 	DDS::DomainParticipant_var mParticipant;
